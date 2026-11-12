@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Bibliotecário</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --border: #cbd5e1;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); }
+
+        /* Tela de Login */
+        #login-screen {
+            display: flex; justify-content: center; align-items: center; height: 100vh;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        }
+        .login-box {
+            background: var(--surface); padding: 2rem; border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 380px;
+        }
+        .login-box h2 { margin-top: 0; color: var(--primary); text-align: center; }
+
+        /* Layout Principal */
+        #app-screen { display: none; min-height: 100vh; }
+        header {
+            background: var(--primary); color: white; padding: 1rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        nav {
+            background: #0f172a; display: flex; gap: 0.5rem; padding: 0.5rem 2rem; flex-wrap: wrap;
+        }
+        nav button {
+            background: transparent; color: #cbd5e1; border: none; padding: 0.75rem 1.25rem;
+            cursor: pointer; border-radius: 4px; font-weight: 600; transition: 0.2s;
+        }
+        nav button:hover, nav button.active { background: var(--primary-light); color: white; }
+
+        main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Cards e Formulários */
+        .card {
+            background: var(--surface); padding: 1.5rem; border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-bottom: 1.5rem;
+        }
+        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+        .stat-box {
+            background: var(--surface); padding: 1.5rem; border-radius: 8px;
+            border-left: 5px solid var(--primary-light); box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .stat-box h3 { margin: 0; font-size: 2rem; color: var(--primary); }
+        .stat-box p { margin: 0.25rem 0 0; color: #64748b; font-weight: 600; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 1rem; }
+        label { font-weight: 600; margin-bottom: 0.35rem; font-size: 0.9rem; }
+        input, select {
+            padding: 0.65rem; border: 1px solid var(--border); border-radius: 4px; font-size: 1rem;
+        }
+        input:focus { outline: 2px solid var(--primary-light); border-color: transparent; }
+
+        .btn {
+            background: var(--primary-light); color: white; border: none; padding: 0.75rem 1.5rem;
+            border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.95rem;
+        }
+        .btn:hover { background: var(--primary); }
+        .btn-success { background: var(--success); }
+        .btn-danger { background: var(--danger); }
+        .btn-warning { background: var(--warning); }
+        .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
+
+        /* Tabelas e Badges */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: #f8fafc; color: #475569; }
+        .badge {
+            padding: 0.25rem 0.6rem; border-radius: 99px; font-size: 0.8rem; font-weight: bold; display: inline-block;
+        }
+        .badge-ok { background: #dcfce7; color: #166534; }
+        .badge-emp { background: #dbeafe; color: #1e40af; }
+        .badge-atraso { background: #fee2e2; color: #991b1b; }
+        .badge-hoje { background: #fef3c7; color: #92400e; }
+        tr.linha-atrasada { background-color: #fef2f2; }
+
+        /* Modal da Carteirinha */
+        #modal-carteirinha {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-body { background: white; padding: 2rem; border-radius: 8px; text-align: center; }
+        .carteirinha-card {
+            width: 340px; height: 210px; border: 2px solid var(--primary); border-radius: 10px;
+            padding: 15px; text-align: left; background: linear-gradient(to bottom right, #ffffff, #eff6ff);
+            display: flex; flex-direction: column; justify-content: space-between; margin: 1rem auto;
+        }
+        .carteirinha-header {
+            border-bottom: 2px solid var(--primary); padding-bottom: 5px;
+            font-weight: bold; color: var(--primary); font-size: 0.95rem;
+        }
+        .carteirinha-info { font-size: 0.85rem; line-height: 1.4; }
+        .carteirinha-barcode { text-align: center; background: white; padding: 4px; border-radius: 4px; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #area-impressao, #area-impressao * { visibility: visible; }
+            #area-impressao { position: fixed; left: 0; top: 0; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>📚 BiblioSys</h2>
+            <p style="text-align:center; color:#64748b; font-size:0.9rem;">Acesso Restrito - Bibliotecários</p>
+            <form onsubmit="fazerLogin(event)">
+                <div class="form-group">
+                    <label>Usuário</label>
+                    <input type="text" id="login-user" value="admin" required>
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="login-pass" value="1234" required>
+                </div>
+                <button type="submit" class="btn" style="width:100%;">Entrar no Sistema</button>
+            </form>
+            <p style="font-size:0.8rem; color:#64748b; margin-top:1rem; text-align:center;">
+                Teste: <b>admin</b> / <b>1234</b> (Administrador)<br>
+                ou <b>biblio</b> / <b>1234</b> (Bibliotecário)
+            </p>
+        </div>
+    </div>
+
+    <!-- SISTEMA PRINCIPAL -->
+    <div id="app-screen">
+        <header>
+            <div><strong>📚 Sistema Bibliotecário</strong></div>
+            <div>
+                <span id="user-badge" style="margin-right:15px; font-size:0.9rem;"></span>
+                <button class="btn btn-danger btn-sm" onclick="sair()">Sair</button>
+            </div>
+        </header>
+
+        <nav>
+            <button class="active" onclick="abrirAba('dashboard', this)">Painel Admin</button>
+            <button onclick="abrirA
